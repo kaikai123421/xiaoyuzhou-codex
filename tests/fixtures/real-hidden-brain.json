@@ -1,0 +1,31 @@
+{
+  "delivery": {
+    "timezone": "Asia/Shanghai",
+    "daily_time": "08:00",
+    "command_poll_minutes": 60
+  },
+  "preferences": {
+    "domain_weights": {
+      "psychology-cognition": 1.0
+    },
+    "keywords": ["brain", "behavior", "psychology"],
+    "excluded_keywords": [],
+    "min_score": 0.5,
+    "daily_min": 1,
+    "daily_max": 8
+  },
+  "subscriptions": [
+    {
+      "id": "hidden-brain",
+      "name": "Hidden Brain",
+      "rss_url": "https://feeds.simplecast.com/kwWc0lhf",
+      "xiaoyuzhou_url": "https://www.xiaoyuzhoufm.com/podcast/hidden-brain",
+      "language": "en",
+      "domains": ["psychology-cognition"],
+      "quality": 0.9,
+      "active": true
+    }
+  ],
+  "discovery_candidates": []
+}
+
