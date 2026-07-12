@@ -1,0 +1,59 @@
+name: podcast-radar
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+    - cron: "17 * * * *"
+
+jobs:
+  daily:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 0 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: private/state.json
+          key: radar-state-${{ github.run_id }}
+          restore-keys: radar-state-
+      - run: pip install -e .
+      - name: Prepare private configuration
+        shell: bash
+        env:
+          PRIVATE_CONFIG_JSON: ${{ secrets.PRIVATE_CONFIG_JSON }}
+          PUBLIC_CONFIG_JSON: ${{ secrets.PUBLIC_CONFIG_JSON }}
+        run: |
+          mkdir -p private config
+          printf '%s' "$PRIVATE_CONFIG_JSON" > private/config.json
+          printf '%s' "$PUBLIC_CONFIG_JSON" > config/config.json
+      - run: xyz-codex --private-config private/config.json daily
+
+  commands:
+    if: github.event.schedule == '17 * * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: private/state.json
+          key: radar-state-${{ github.run_id }}
+          restore-keys: radar-state-
+      - run: pip install -e .
+      - name: Prepare private configuration
+        shell: bash
+        env:
+          PRIVATE_CONFIG_JSON: ${{ secrets.PRIVATE_CONFIG_JSON }}
+          PUBLIC_CONFIG_JSON: ${{ secrets.PUBLIC_CONFIG_JSON }}
+        run: |
+          mkdir -p private config
+          printf '%s' "$PRIVATE_CONFIG_JSON" > private/config.json
+          printf '%s' "$PUBLIC_CONFIG_JSON" > config/config.json
+      - run: xyz-codex --private-config private/config.json process-commands
+
