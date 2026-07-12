@@ -1,0 +1,36 @@
+{
+  "delivery": {
+    "timezone": "Asia/Shanghai",
+    "daily_time": "08:00",
+    "command_poll_minutes": 60
+  },
+  "preferences": {
+    "domain_weights": {
+      "ai-tech": 1.0,
+      "business-investing": 0.95,
+      "psychology-cognition": 0.7,
+      "health-science": 0.65,
+      "interviews": 0.6
+    },
+    "keywords": ["AI", "agent", "鍒涗笟", "鍟嗕笟", "鎶曡祫", "璁ょ煡", "鍋ュ悍"],
+    "excluded_keywords": ["绾箍鍛?, "甯﹁揣"],
+    "min_score": 0.55,
+    "daily_min": 5,
+    "daily_max": 8
+  },
+  "subscriptions": [
+    {
+      "id": "example-podcast",
+      "name": "绀轰緥鎾锛堣鏇挎崲锛?,
+      "rss_url": "https://example.com/podcast.xml",
+      "xiaoyuzhou_url": "https://www.xiaoyuzhoufm.com/podcast/example",
+      "language": "zh",
+      "domains": ["ai-tech"],
+      "quality": 0.8,
+      "active": false
+    }
+  ],
+  "discovery_candidates": []
+}
+
+
