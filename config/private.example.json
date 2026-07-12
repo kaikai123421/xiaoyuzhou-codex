@@ -1,0 +1,13 @@
+{
+  "feishu": {
+    "app_id": "cli_xxx",
+    "app_secret": "replace-me",
+    "receive_id": "oc_xxx"
+  },
+  "transcription": {
+    "provider": "local-or-optional",
+    "api_key": "replace-only-if-needed"
+  }
+}
+
+
