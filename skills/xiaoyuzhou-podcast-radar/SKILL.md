@@ -25,7 +25,7 @@ Operate an RSS-first podcast radar while preserving Xiaoyuzhou as the listening 
 2. Validate sources with `python skills/xiaoyuzhou-podcast-radar/scripts/run.py check-sources`.
 3. For a daily run, collect only the configured recent window, deduplicate, score, and keep 5–8 items only when they meet the threshold.
 4. Translate English titles and summaries into Chinese while retaining original names and URLs.
-5. Send the brief to Feishu and archive the full Markdown using the available Feishu document capability. If no Feishu capability or credentials exist, save the report locally and state the exact missing requirement.
+5. Send the brief to the configured QQ mailbox. If mail credentials are unavailable, save the report locally and state the exact missing requirement.
 6. Persist the date-to-number index before accepting deep-dive commands. Never infer a number from another day.
 7. For deep dives, prefer publisher transcripts, then reliable captions, then permitted audio transcription. Label the evidence source. If only show notes are available, produce a show-notes analysis and say that the full audio was not verified.
 8. Record `like`, `skip`, `dislike`, and `deep_dive` feedback without deleting history or sources.

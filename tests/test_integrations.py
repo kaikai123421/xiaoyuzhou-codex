@@ -1,10 +1,12 @@
 import json
 import tempfile
 import unittest
+from email.message import EmailMessage
 from pathlib import Path
 
 from xiaoyuzhou_codex.config import load_config
 from xiaoyuzhou_codex.deep_dive import TranscriptResolver, build_deep_dive_prompt
+from xiaoyuzhou_codex.email_delivery import QQMailClient
 from xiaoyuzhou_codex.feishu import FeishuClient
 
 
@@ -42,6 +44,71 @@ class FeishuTests(unittest.TestCase):
         messages = client.list_messages("chat")
         self.assertEqual(messages[0]["text"], "深挖 2")
         self.assertTrue(any(call[2].get("Authorization") == "Bearer tenant-token" for call in transport.calls))
+
+
+class FakeSmtp:
+    def __init__(self):
+        self.logged_in = None
+        self.messages = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return False
+
+    def login(self, username, password):
+        self.logged_in = (username, password)
+
+    def send_message(self, message):
+        self.messages.append(message)
+
+
+class EmailTests(unittest.TestCase):
+    def test_sends_utf8_digest_through_qq_smtp(self):
+        smtp = FakeSmtp()
+        client = QQMailClient("sender@qq.com", "auth-code", smtp_factory=lambda *_: smtp)
+        client.send_text("reader@qq.com", "播客日报", "今天的精选内容")
+        self.assertEqual(smtp.logged_in, ("sender@qq.com", "auth-code"))
+        self.assertEqual(smtp.messages[0]["To"], "reader@qq.com")
+        self.assertEqual(smtp.messages[0]["Subject"], "播客日报")
+        self.assertIn("今天的精选内容", smtp.messages[0].get_content())
+
+    def test_reads_unseen_email_commands_from_qq_imap(self):
+        message = EmailMessage()
+        message.set_content("深挖 2、5", charset="utf-8")
+
+        class FakeImap:
+            def __init__(self):
+                self.stored = []
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                return False
+
+            def login(self, *_):
+                return "OK", []
+
+            def select(self, *_):
+                return "OK", []
+
+            def search(self, *_):
+                return "OK", [b"42"]
+
+            def fetch(self, *_):
+                return "OK", [(b"42", message.as_bytes())]
+
+            def store(self, *args):
+                self.stored.append(args)
+                return "OK", []
+
+        imap = FakeImap()
+        client = QQMailClient("sender@qq.com", "auth-code", smtp_factory=lambda *_: FakeSmtp(), imap_factory=lambda *_: imap)
+        messages = client.list_unseen_messages()
+        self.assertEqual(messages, [{"id": "42", "text": "深挖 2、5"}])
+        self.assertEqual(imap.stored, [])
 
 
 class DeepDiveTests(unittest.TestCase):

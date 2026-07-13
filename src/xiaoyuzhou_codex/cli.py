@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -8,6 +9,7 @@ from zoneinfo import ZoneInfo
 from .commands import parse_command
 from .config import load_config
 from .deep_dive import build_deep_dive_prompt
+from .email_delivery import QQMailClient
 from .engine import collect, generate_daily
 from .feishu import FeishuClient
 from .store import StateStore
@@ -43,7 +45,16 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _config(args) -> dict:
     private = Path(args.private_config)
-    return load_config(Path(args.config), private if private.exists() else None)
+    config = load_config(Path(args.config), private if private.exists() else None)
+    feishu = config.setdefault("feishu", {})
+    for key, variable in (("app_id", "FEISHU_APP_ID"), ("app_secret", "FEISHU_APP_SECRET")):
+        if not feishu.get(key) and os.environ.get(variable):
+            feishu[key] = os.environ[variable]
+    email = config.setdefault("email", {})
+    for key, variable in (("username", "QQ_SMTP_USERNAME"), ("auth_code", "QQ_SMTP_AUTH_CODE"), ("recipient", "QQ_SMTP_TO")):
+        if not email.get(key) and os.environ.get(variable):
+            email[key] = os.environ[variable]
+    return config
 
 
 def _client(config: dict) -> FeishuClient:
@@ -52,6 +63,14 @@ def _client(config: dict) -> FeishuClient:
     if missing:
         raise RuntimeError(f"飞书配置缺失：{', '.join(missing)}")
     return FeishuClient(feishu["app_id"], feishu["app_secret"])
+
+
+def _email_client(config: dict) -> QQMailClient:
+    email = config.get("email", {})
+    missing = [key for key in ("username", "auth_code", "recipient") if not email.get(key)]
+    if missing:
+        raise RuntimeError(f"邮箱配置缺失：{', '.join(missing)}")
+    return QQMailClient(email["username"], email["auth_code"])
 
 
 def main(argv=None) -> int:
@@ -65,14 +84,19 @@ def main(argv=None) -> int:
     if args.command == "daily":
         report, failures = generate_daily(config, Path(args.state), persist=not args.dry_run)
         print(report.full_markdown)
-        if not args.dry_run and config.get("feishu", {}).get("receive_id"):
+        if not args.dry_run and config.get("email", {}).get("recipient"):
+            _email_client(config).send_text(config["email"]["recipient"], f"播客日报｜{report_date(config)}", report.brief_text)
+        elif not args.dry_run and config.get("feishu", {}).get("receive_id"):
             _client(config).send_text(config["feishu"]["receive_id"], report.brief_text)
         return 1 if failures and not report.index else 0
     if args.command == "process-commands":
-        client = _client(config)
+        email = config.get("email", {})
+        email_client = _email_client(config) if email.get("recipient") else None
+        client = None if email_client else _client(config)
         today = report_date(config)
         index = state.get_report_index(today)
-        for message in reversed(client.list_messages(config["feishu"]["receive_id"])):
+        messages = email_client.list_unseen_messages() if email_client else client.list_messages(config["feishu"]["receive_id"])
+        for message in reversed(messages):
             if not message["text"] or not state.claim_message(message["id"]):
                 continue
             try:
@@ -81,7 +105,11 @@ def main(argv=None) -> int:
                 continue
             selected = [index.get(str(number)) for number in command.episode_numbers]
             state.add_feedback({"action": command.action, "episodes": selected, "reason": command.reason, "message_id": message["id"]})
-            client.send_text(config["feishu"]["receive_id"], f"已记录：{message['text']}。深挖任务将在本轮生成。")
+            reply = f"已记录：{message['text']}。深挖任务将在本轮生成。"
+            if email_client:
+                email_client.send_text(email["recipient"], "播客雷达｜已收到你的指令", reply)
+            else:
+                client.send_text(config["feishu"]["receive_id"], reply)
         return 0
     if args.command == "deep-dive":
         transcript = read_evidence(args.transcript)

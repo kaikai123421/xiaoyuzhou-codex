@@ -1,6 +1,6 @@
 # Configuration
 
-Copy `config/config.example.json` to ignored `config/config.json`. Store Feishu credentials and transcription keys only in ignored `private/config.json`, based on `config/private.example.json`.
+Copy `config/config.example.json` to ignored `config/config.json`. Store QQ 邮箱授权码 and transcription keys only in ignored `private/config.json`, based on `config/private.example.json`.
 
 Subscription fields:
 
@@ -15,5 +15,4 @@ Subscription fields:
 
 Keep AI/technology and business/investing weights highest by default. Treat feedback as a gradual adjustment; do not let one click permanently hide an entire domain.
 
-Feishu requires an app ID, app secret, and destination chat ID. Grant only message read/send and document permissions required for the selected destination.
-
+QQ 邮箱使用 `smtp.qq.com:465` 发送、`imap.qq.com:993` 读取回复。使用授权码而非登录密码；将用户名、授权码和收件地址存于本机环境变量或忽略的私有配置。

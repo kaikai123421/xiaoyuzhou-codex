@@ -1,12 +1,11 @@
 {
-  "feishu": {
-    "app_id": "cli_xxx",
-    "app_secret": "replace-me",
-    "receive_id": "oc_xxx"
+  "email": {
+    "username": "your-qq@qq.com",
+    "auth_code": "replace-with-qq-smtp-authorization-code",
+    "recipient": "your-qq@qq.com"
   },
   "transcription": {
     "provider": "local-or-optional",
     "api_key": "replace-only-if-needed"
   }
 }
-

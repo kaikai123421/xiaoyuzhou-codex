@@ -1,4 +1,4 @@
 interface:
   display_name: "小宇宙播客雷达"
-  short_description: "发现筛选并深挖中英文优质播客，生成中文飞书日报与知识库"
+  short_description: "发现筛选并深挖中英文优质播客，生成中文 QQ 邮箱日报"
   default_prompt: "请使用 $xiaoyuzhou-podcast-radar 生成今天的中文播客雷达日报。"
